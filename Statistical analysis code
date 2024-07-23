@@ -1,0 +1,108 @@
+#Code used for logistic regression analysis in SAS
+
+/* Univariable logistic regressions evaluating factors associated with the use of clinical progression criteria */
+
+proc logistic data= work.clinprog;
+class diseasesitestrata(ref="Other") / param=glm;
+model ClinicalProgression(event="Y")= diseasesitestrata
+/ link=logit expb clodds=both alpha=0.05 technique=fisher lackfit ; run;
+
+proc logistic data= work.clinprog;
+class GU(ref="All other") / param=glm;
+model ClinicalProgression(event="Y")= GU
+/ link=logit expb clodds=both alpha=0.05 technique=fisher lackfit ; run;
+
+proc logistic data= work.clinprog;
+class GI(ref="All other") / param=glm;
+model ClinicalProgression(event="Y")= GI
+/ link=logit expb clodds=both alpha=0.05 technique=fisher lackfit ; run;
+
+proc logistic data= work.clinprog;
+class coopgrp(ref="0") / param=glm;
+model ClinicalProgression(event="Y")= coopgrp
+/ link=logit expb clodds=both alpha=0.05 technique=fisher lackfit ; run;
+
+proc logistic data= work.clinprog;
+class indfund(ref="0") / param=glm;
+model ClinicalProgression(event="Y")= indfund
+/ link=logit expb clodds=both alpha=0.05 technique=fisher lackfit ; run;
+
+proc logistic data= work.clinprog;
+model ClinicalProgression(event="Y")= enrollment100
+/ link=logit expb clodds=both alpha=0.05 technique=fisher lackfit ; run;
+
+proc logistic data= work.clinprog;
+model ClinicalProgression(event="Y")= publishdate
+/ link=logit expb clodds=both alpha=0.05 technique=fisher lackfit ; run;
+
+proc logistic data= work.clinprog;
+class BlindingSham(ref="Double Blind") / param=glm;
+model ClinicalProgression(event="Y")= BlindingSham
+/ link=logit expb clodds=both alpha=0.05 technique=fisher lackfit ; run;
+
+proc logistic data= work.clinprog;
+class OS_PEP(ref="1") / param=glm;
+model ClinicalProgression(event="Y")= OS_PEP
+/ link=logit expb clodds=both alpha=0.05 technique=fisher lackfit ; run;
+
+#Code used for probabilistic sensitivity analysis in R
+
+#Probabilistic Sensitivity Analyses
+
+set.seed(123)
+
+# Define the observed outcomes
+total_trials <- 216
+inclusion_clin_prog <- 27
+
+# Set the parameters for the Beta distribution
+alpha <- inclusion_clin_prog + 1
+beta <- total_trials - inclusion_clin_prog + 1
+
+# Define the number of simulations
+num_simulations <- 10000
+
+#Draw N beta distributed values
+inclusion_rate_samples <- rbeta(num_simulations, alpha, beta)
+
+# Analyze the results
+mean_inclusion_rate <- mean(inclusion_rate_samples)
+sd_inclusion_rate <- sd(inclusion_rate_samples)
+quantiles <- quantile(inclusion_rate_samples, probs = c(0.025, 0.5, 0.975))
+
+# Print the results
+cat(sprintf("Estimated Mean Inclusion Rate: %.4f\n", mean_inclusion_rate))
+cat("95% Credible Interval of inclusion Rate:\n")
+print(quantiles)
+
+plot(density(inclusion_rate_samples), 
+     main = "Distribution for the rate of clinical progression inclusion")
+
+#Probabilistic Sensitivity Analysis
+
+# Define the observed outcomes
+total_trials <- 27
+reporting_clin_prog <- 16
+
+# Set the parameters for the Beta distribution
+alpha <- reporting_clin_prog + 1
+beta <- total_trials - reporting_clin_prog + 1
+
+# Define the number of simulations
+num_simulations <- 10000
+
+#Draw N beta distributed values
+reporting_rate_samples <- rbeta(num_simulations, alpha, beta)
+
+# Analyze the results
+mean_reporting_rate <- mean(reporting_rate_samples)
+quantiles <- quantile(reporting_rate_samples, probs = c(0.025, 0.5, 0.975))
+
+# Print the results
+cat(sprintf("Estimated Mean Reporting Rate: %.4f\n", mean_reporting_rate))
+cat("95% Credible Interval of Reporting Rate:\n")
+print(quantiles)
+
+plot(density(reporting_rate_samples), 
+     main = "Distribution for the rate of clinical progression reporting")
+ 
